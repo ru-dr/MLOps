@@ -7,7 +7,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-import main  # noqa: E402
+import main
 
 
 def test_load_config_defaults(monkeypatch):
@@ -48,7 +48,7 @@ def test_run_writes_artifacts(tmp_path):
     config = {**main.load_config(), "output_dir": str(tmp_path)}
     metrics, model_path, metrics_path = main.run(config)
     loaded = joblib.load(model_path)
-    assert loaded.predict([[5.1, 3.5, 1.4, 0.2]])[0] == 0  # setosa
+    assert loaded.predict([[5.1, 3.5, 1.4, 0.2]])[0] == 0
     saved = json.loads(metrics_path.read_text())
     assert saved["accuracy"] == metrics["accuracy"]
     assert saved["config"]["output_dir"] == str(tmp_path)

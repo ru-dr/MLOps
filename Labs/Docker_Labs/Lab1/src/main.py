@@ -1,4 +1,3 @@
-# Import necessary libraries
 import json
 import os
 from pathlib import Path
@@ -11,7 +10,6 @@ from sklearn.model_selection import train_test_split
 
 
 def load_config():
-    """Read training settings from environment variables so the image can be tuned at `docker run`."""
     return {
         "n_estimators": int(os.getenv("N_ESTIMATORS", "100")),
         "test_size": float(os.getenv("TEST_SIZE", "0.2")),
@@ -22,7 +20,6 @@ def load_config():
 
 
 def train(n_estimators, test_size, random_state):
-    """Train a Random Forest on Iris and return the model with its held-out split."""
     iris = load_iris()
     X_train, X_test, y_train, y_test = train_test_split(
         iris.data, iris.target, test_size=test_size, random_state=random_state, stratify=iris.target
@@ -33,7 +30,6 @@ def train(n_estimators, test_size, random_state):
 
 
 def evaluate(model, X_test, y_test, target_names):
-    """Score the model on the test split."""
     predictions = model.predict(X_test)
     return {
         "accuracy": accuracy_score(y_test, predictions),
@@ -42,7 +38,6 @@ def evaluate(model, X_test, y_test, target_names):
 
 
 def save(model, metrics, config, output_dir):
-    """Write the model and a metrics file to output_dir and return their paths."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     model_path = output_dir / "iris_model.pkl"
