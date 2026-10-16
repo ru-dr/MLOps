@@ -4,6 +4,10 @@ Trains a Random Forest on the Iris dataset inside a container, evaluates it on a
 and writes the model plus a `metrics.json` file to `/app/output`.
 
 ## Changes from the original lab
+- `src/main.py` refactored into `load_config`, `train`, `evaluate`, `save` and `run` functions
+- Train/test split is stratified so every class is represented in the test set
+- Model and `metrics.json` are written to `/app/output` and can be kept on the host with a volume mount
+- `tests/test_main.py` adds a pytest suite covering config, training, evaluation, saved artifacts and the accuracy gate
 - `python:3.12-slim` base image with pinned dependencies and a cached pip layer
 - Multi-stage `dockerfile`: `test` stage runs pytest, `train` stage runs as a non-root user
 - Training reports test accuracy and a per-class report, and exits non-zero if accuracy is below `MIN_ACCURACY`
