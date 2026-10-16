@@ -1,0 +1,51 @@
+name: Python Unittests
+run-name: Unittests on ${{ github.ref_name }} by @${{ github.actor }}
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13', '3.14']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unittests
+        run: python -m unittest test.test_unittest -v
+
+      - name: Notify on success
+        if: success()
+        run: echo "Unit tests passed successfully on Python ${{ matrix.python-version }}"
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "Unit tests failed on Python ${{ matrix.python-version }}"

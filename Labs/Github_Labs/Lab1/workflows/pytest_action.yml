@@ -1,0 +1,76 @@
+name: Testing with Pytest
+run-name: Pytest on ${{ github.ref_name }} by @${{ github.actor }}
+
+on:
+  push:
+    branches:
+      - main
+      - 'releases/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13', '3.14']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests with coverage and generate XML reports
+        run: >
+          pytest
+          --junitxml=pytest-report.xml
+          --cov=src
+          --cov-report=term-missing
+          --cov-report=xml
+          --cov-fail-under=90
+        continue-on-error: false
+
+      - name: Write coverage summary
+        if: always()
+        run: |
+          echo "### Python ${{ matrix.python-version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          python -m coverage report >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-py${{ matrix.python-version }}
+          path: |
+            pytest-report.xml
+            coverage.xml
+
+      - name: Notify on success
+        if: success()
+        run: echo "Tests passed successfully on Python ${{ matrix.python-version }}"
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "Tests failed on Python ${{ matrix.python-version }}"

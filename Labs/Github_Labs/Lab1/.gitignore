@@ -1,0 +1,13 @@
+# Virtual environment
+lab_01/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Test reports
+pytest-report.xml
+.coverage
+coverage.xml
+htmlcov/
