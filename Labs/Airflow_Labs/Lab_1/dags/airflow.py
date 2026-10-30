@@ -3,7 +3,7 @@ from airflow import DAG
 # from airflow.operators.python import PythonOperator
 from airflow.providers.standard.operators.python import PythonOperator
 from datetime import datetime, timedelta
-from src.lab import load_data, data_preprocessing, build_save_model, load_model_elbow
+from src.lab import load_data, data_preprocessing, build_save_model, load_model_elbow, save_cluster_report
 
 # NOTE:
 # In Airflow 3.x, enabling XCom pickling should be done via environment variable:
@@ -22,8 +22,10 @@ default_args = {
 with DAG(
     'Airflow_Lab1',
     default_args=default_args,
-    description='Dag example for Lab 1 of Airflow series',
-    catchup=False, 
+    description='KMeans clustering pipeline: load, scale, elbow-select k, fit, predict',
+    schedule=None,
+    catchup=False,
+    tags=['lab1', 'kmeans'],
 ) as dag:
 
     # Task to load data, calls the 'load_data' Python function
@@ -46,15 +48,22 @@ with DAG(
         op_args=[data_preprocessing_task.output, "model.sav"],
     )
 
-    # Task to load a model using the 'load_model_elbow' function, depends on 'build_save_model_task'
+    # Task to load the saved model + scaler and predict on test.csv, depends on 'build_save_model_task'
     load_model_task = PythonOperator(
         task_id='load_model_task',
         python_callable=load_model_elbow,
         op_args=["model.sav", build_save_model_task.output],
     )
 
+    # Task to profile the clusters (sizes + centroids) and write model/cluster_report.json
+    cluster_report_task = PythonOperator(
+        task_id='cluster_report_task',
+        python_callable=save_cluster_report,
+        op_args=["model.sav", build_save_model_task.output],
+    )
+
     # Set task dependencies
-    load_data_task >> data_preprocessing_task >> build_save_model_task >> load_model_task
+    load_data_task >> data_preprocessing_task >> build_save_model_task >> load_model_task >> cluster_report_task
 
 # If this script is run directly, allow command-line interaction with the DAG
 if __name__ == "__main__":
