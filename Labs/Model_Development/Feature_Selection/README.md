@@ -9,6 +9,7 @@ A Random Forest is trained on each selected feature set and scored on the same s
 
 ## Changes from the original lab
 - Runs on current pandas (3.x): `Series.iteritems()` replaced with `.index`, `DataFrame.append()` with `pd.concat`, positional `drop(..., 1)` with `drop(columns=...)`, and `inplace=True` drops with reassignment
+- Correlation filters computed on the training rows only, so the test set no longer influences which features are picked (it selects the same 25 features, so the results did not change)
 - ROC AUC computed from predicted probabilities instead of hard 0/1 predictions
 - Feature importance model is seeded (`random_state=47`) so the selected features are the same on every run
 - Removed duplicate `SelectFromModel` import and used `X.columns` instead of repeating `df.drop("diagnosis_int", ...)`
